@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Playground</title>
+    <style>
+        /* --- CSS: ส่วนตกแต่งและอนิเมชั่น --- */
+        :root {
+            --primary: #00ff88;
+            --secondary: #ff0055;
+            --bg: #0f0f13;
+            --text: #ffffff;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            display: flex;
+        }
+
+        /* --- 1. Sidebar Menu (เมนูด้านข้าง) --- */
+        .sidebar {
+            width: 80px;
+            height: 100vh;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 20px;
+            position: fixed;
+            left: 0;
+            z-index: 100;
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .menu-item {
+            width: 50px;
+            height: 50px;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .menu-item:hover {
+            background: var(--primary);
+            color: #000;
+            transform: scale(1.1) translateX(10px);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        /* Tooltip */
+        .menu-item::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 70px;
+            background: var(--primary);
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+
+        .menu-item:hover::after {
+            opacity: 1;
+            left: 60px;
+        }
+
+        /* --- Main Content --- */
+        .container {
+            margin-left: 80px;
+            padding: 40px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        h1 {
+            grid-column: 1 / -1;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glow 2s infinite alternate;
+        }
+
+        /* --- 2. Interactive 3D Card (การ์ด 3 มิติ) --- */
+        .card {
+            background: var(--glass);
+            height: 300px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .card-content {
+            transform: translateZ(20px);
+            text-align: center;
+        }
+
+        .card:hover {
+            border-color: var(--secondary);
+            box-shadow: 0 0 30px rgba(255, 0, 85, 0.2);
+        }
+
+        /* --- 3. Neon Button & Particles (ปุ่มระเบิด) --- */
+        .btn-boom {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            border-radius: 50px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            font-weight: bold;
+        }
+
+        .btn-boom:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        .particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: explode 1s forwards;
+        }
+
+        /* --- 4. Toggle Switch (สวิตช์เปลี่ยนธีม) --- */
+        .theme-panel {
+            grid-column: 1 / -1;
+            background: var(--glass);
+            padding: 20px;
+            border-radius: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .switch-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Animations */
+        @keyframes glow {
+            from { text-shadow: 0 0 10px var(--primary); }
+            to { text-shadow: 0 0 20px var(--secondary), 0 0 10px var(--primary); }
+        }
+
+        @keyframes explode {
+            0% { transform: translate(0, 0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        }
+
+        .floating-shape {
+            position: absolute;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            z-index: -1;
+            animation: float 10s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-50px) scale(1.2); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="floating-shape" style="top: -100px; left: -100px; width: 400px; height: 400px;"></div>
+    <div class="floating-shape" style="bottom: -100px; right: -100px; width: 300px; height: 300px; animation-delay: 2s;"></div>
+
+    <nav class="sidebar">
+        <div class="menu-item" data-tooltip="Home">🏠</div>
+        <div class="menu-item" data-tooltip="Profile">👤</div>
+        <div class="menu-item" data-tooltip="Settings">⚙️</div>
+        <div class="menu-item" data-tooltip="Game">🎮</div>
+    </nav>
+
+    <main class="container">
+        <h1 id="title">Welcome, Player One.</h1>
+
+        <div class="card" id="tiltCard">
+            <div class="card-content">
+                <h2>3D Hologram</h2>
+                <p>Hover me & move mouse!</p>
+                <div style="font-size: 50px; margin-top: 20px;">🧊</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-content">
+                <h2>Particle System</h2>
+                <p>Click the button below</p>
+                <br>
+                <button class="btn-boom" onclick="createParticles(event)">CLICK ME!</button>
+            </div>
+        </div>
+
+        <div class="theme-panel">
+            <h3>System Theme Control</h3>
+            <div>
+                <button class="switch-btn" style="background:#00ff88;" onclick="changeTheme('#00ff88', '#ff0055')">Neon Green</button>
+                <button class="switch-btn" style="background:#00d9ff;" onclick="changeTheme('#00d9ff', '#ffea00')">Cyber Blue</button>
+                <button class="switch-btn" style="background:#ff0055;" onclick="changeTheme('#ff0055', '#7b00ff')">Hot Pink</button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- JS: ส่วนควบคุมการทำงาน ---
+
+        // 1. ระบบ 3D Tilt Effect (เอฟเฟกต์เอียงการ์ด)
+        const card = document.getElementById('tiltCard');
+        
+        card.addEventListener('mousemove', (e) => {
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = ((y - centerY) / centerY) * -20; // หมุนแกน X
+            const rotateY = ((x - centerX) / centerX) * 20;  // หมุนแกน Y
+
+            card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+        });
+
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1)`;
+        });
+
+        // 2. ระบบ Particle Explosion (เอฟเฟกต์ระเบิด)
+        function createParticles(e) {
+            const btn = e.target;
+            const rect = btn.getBoundingClientRect();
+            
+            for(let i=0; i<30; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                
+                // สุ่มทิศทาง
+                const tx = (Math.random() - 0.5) * 200;
+                const ty = (Math.random() - 0.5) * 200;
+                
+                particle.style.setProperty('--tx', `${tx}px`);
+                particle.style.setProperty('--ty', `${ty}px`);
+                
+                // กำหนดตำแหน่งเริ่มต้นที่จุดที่คลิก
+                particle.style.left = (e.clientX - rect.left) + 'px';
+                particle.style.top = (e.clientY - rect.top) + 'px';
+                
+                // สุ่มสี
+                const colors = ['#00ff88', '#ff0055', '#ffff00', '#00d9ff'];
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+
+                btn.appendChild(particle);
+
+                // ลบ Element เมื่อเล่นเสร็จเพื่อไม่ให้หนักเครื่อง
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
+
+        // 3. ระบบ Typing Effect (เอฟเฟกต์พิมพ์ตัวอักษร)
+        const text = "System Online... Ready for Action.";
+        const title = document.getElementById('title');
+        let index = 0;
+
+        function typeWriter() {
+            if (index < text.length) {
+                title.innerHTML = text.substring(0, index+1) + '<span style="animation:blink 0.5s infinite">|</span>';
+                index++;
+                setTimeout(typeWriter, 100);
+            } else {
+                title.innerHTML = text; // จบการพิมพ์
+            }
+        }
+        
+        // เริ่มพิมพ์เมื่อโหลดหน้าเว็บ
+        setTimeout(typeWriter, 1000);
+
+        // 4. ระบบเปลี่ยน Theme
+        function changeTheme(primary, secondary) {
+            document.documentElement.style.setProperty('--primary', primary);
+            document.documentElement.style.setProperty('--secondary', secondary);
+        }
+    </script>
+</body>
+</html>
